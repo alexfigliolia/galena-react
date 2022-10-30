@@ -1,6 +1,7 @@
 import type { State } from "./State";
 import type { EmpireSubscription } from "./types";
 import { AutoIncrementingID } from "./AutoIncrementingID";
+import { Emitter } from "./Emitter";
 
 /**
  * Empire
@@ -30,8 +31,11 @@ export class Empire {
    *
    * Returns a `State` instance by name
    */
-  public static getState(key: string) {
-    return this._state.get(key);
+  public static getState<T = any>(name: string) {
+    if (!this._state.get(name)) {
+      throw new Error(`No state exists for the name ${name}`);
+    }
+    return this._state.get(name) as State<T>;
   }
 
   /**
@@ -83,5 +87,19 @@ export class Empire {
         state.unsubscribe(ID);
       }
     });
+  }
+
+  /**
+   * Destroy
+   *
+   * 1. Destroys all `State` instances and subscriptions,
+   * 2. Resets the autoIncrementingId's and the Emitter
+   */
+  public static destroy() {
+    this._state = new Map<string, State<any>>();
+    this.stateUpdateID.destroy();
+    this.subscriptionID.destroy();
+    this.subscriptions = new Map<string, EmpireSubscription[]>();
+    Emitter.destroy();
   }
 }

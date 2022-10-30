@@ -50,4 +50,13 @@ export class Emitter {
       }
     }
   }
+
+  /**
+   * Destroy
+   *
+   * Resets all open subscriptions
+   */
+  public static destroy() {
+    this.subscriptions = new Map<string, Indexer<any>>();
+  }
 }
