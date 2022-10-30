@@ -1,3 +1,3 @@
 export { State } from "./State";
-export { Global } from "./Global";
+export { Empire } from "./Empire";
 export { DevTool } from "./DevTool";

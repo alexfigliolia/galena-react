@@ -1,6 +1,6 @@
 import { MockInterfaces } from "../MockInterfaces";
 import { DevTool } from "../DevTool";
-import { Global } from "../Global";
+import { Empire } from "../Empire";
 import { State } from "../State";
 
 describe("State", () => {
@@ -8,12 +8,12 @@ describe("State", () => {
     MockInterfaces.restoreAllMocks();
   });
 
-  describe("The Global State object", () => {
+  describe("The Empire State object", () => {
     it("Adds states to the global state", () => {
       const toggle = new State<boolean>("toggle", false);
       const someState = new State<{ someState: boolean }>("some-state", { someState: false });
-      expect(Global.getState("toggle")).toEqual(toggle);
-      expect(Global.getState("some-state")).toEqual(someState);
+      expect(Empire.getState("toggle")).toEqual(toggle);
+      expect(Empire.getState("some-state")).toEqual(someState);
     });
 
     it("Updates state on the global state", () => {
@@ -25,8 +25,8 @@ describe("State", () => {
       someState.update((state) => {
         state.someState = true;
       });
-      expect(Global.getState("some-state")?.state.someState).toEqual(true);
-      expect(Global.getState("toggle")?.state).toEqual([true]);
+      expect(Empire.getState("some-state")?.state.someState).toEqual(true);
+      expect(Empire.getState("toggle")?.state).toEqual([true]);
     });
   });
 

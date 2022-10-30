@@ -1,4 +1,4 @@
-export interface GlobalIndex {
+export interface EmpireSubscription {
   ID: string;
   name: string;
 }
