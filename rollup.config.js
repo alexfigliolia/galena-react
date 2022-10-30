@@ -21,7 +21,7 @@ export default defineConfig([
   // CommonJS
   {
     input: "src/index.ts",
-    output: { file: "lib/metrics-queue.js", format: "cjs", indent: false },
+    output: { file: "lib/galena.js", format: "cjs", indent: false },
     external,
     plugins: [
       nodeResolve({
@@ -42,7 +42,7 @@ export default defineConfig([
   // ES
   {
     input: "src/index.ts",
-    output: { file: "es/metrics-queue.js", format: "es", indent: false },
+    output: { file: "es/galena.js", format: "es", indent: false },
     external,
     plugins: [
       nodeResolve({
@@ -63,7 +63,7 @@ export default defineConfig([
   // ES for Browsers
   {
     input: "src/index.ts",
-    output: { file: "es/metrics-queue.mjs", format: "es", indent: false },
+    output: { file: "es/galena.mjs", format: "es", indent: false },
     plugins: [
       nodeResolve({
         extensions,
@@ -96,9 +96,9 @@ export default defineConfig([
   {
     input: "src/index.ts",
     output: {
-      file: "dist/metrics-queue.js",
+      file: "dist/galena.js",
       format: "umd",
-      name: "MetricsQueue",
+      name: "Galena",
       indent: false,
     },
     plugins: [
@@ -125,9 +125,9 @@ export default defineConfig([
   {
     input: "src/index.ts",
     output: {
-      file: "dist/metrics-queue.min.js",
+      file: "dist/galena.min.js",
       format: "umd",
-      name: "MetricsQueue",
+      name: "Galena",
       indent: false,
     },
     plugins: [
