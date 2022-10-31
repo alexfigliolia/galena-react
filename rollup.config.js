@@ -8,7 +8,7 @@ import { terser } from "rollup-plugin-terser";
 
 import pkg from "./package.json";
 
-const extensions = [".ts"];
+const extensions = [".ts", ".tsx"];
 const noDeclarationFiles = { compilerOptions: { declaration: false } };
 
 const babelRuntimeVersion = pkg.dependencies["@babel/runtime"].replace(/^[^0-9]*/, "");

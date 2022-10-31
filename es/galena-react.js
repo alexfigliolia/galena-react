@@ -1,5 +1,6 @@
-import React, { useState, useEffect, createContext, Component } from 'react';
+import React, { useState, useEffect, Component, createContext } from 'react';
 import { Empire } from 'galena';
+import _inheritsLoose from '@babel/runtime/helpers/esm/inheritsLoose';
 
 /**
  * Use Galena State
@@ -74,50 +75,76 @@ function useGalenaMutation(stateName) {
  *
  * `const { Context, ProviderFactory } = new ContextFactory("state-name");`
  */
-class ContextFactory {
-    Context;
-    ProviderFactory;
-    constructor(stateName) {
-        if (!Empire.getState(stateName)) {
-            throw new Error(`A state fragment by the name of ${stateName} has not been created yet`);
+
+var ContextFactory = /*#__PURE__*/function () {
+  function ContextFactory(stateName) {
+    this.Context = void 0;
+    this.ProviderFactory = void 0;
+
+    if (!Empire.getState(stateName)) {
+      throw new Error("A state fragment by the name of " + stateName + " has not been created yet");
+    }
+
+    this.Context = createContext(Empire.getState(stateName).state);
+    this.ProviderFactory = this.createProvider(stateName);
+  }
+  /**
+   * Create Provider
+   *
+   * Returns a Context.Provider with a living subscription to your
+   * specified state fragment
+   */
+
+
+  var _proto = ContextFactory.prototype;
+
+  _proto.createProvider = function createProvider(stateName) {
+    var Context = this.Context;
+    return /*#__PURE__*/function (_Component) {
+      _inheritsLoose(ProviderFactory, _Component);
+
+      function ProviderFactory(props) {
+        var _this;
+
+        _this = _Component.call(this, props) || this;
+        _this.mounted = true;
+        _this.subscription = void 0;
+        _this.state = Empire.getState(stateName).state;
+        _this.subscription = _this.initializeSubscription();
+        return _this;
+      }
+
+      var _proto2 = ProviderFactory.prototype;
+
+      _proto2.initializeSubscription = function initializeSubscription() {
+        var _this2 = this;
+
+        return Empire.getState(stateName).subscribe(function (state) {
+          if (_this2.mounted) {
+            _this2.setState(state);
+          }
+        });
+      };
+
+      _proto2.componentWillUnmount = function componentWillUnmount() {
+        this.mounted = false;
+
+        if (this.subscription) {
+          Empire.getState(stateName).unsubscribe(this.subscription);
         }
-        this.Context = createContext(Empire.getState(stateName).state);
-        this.ProviderFactory = this.createProvider(stateName);
-    }
-    /**
-     * Create Provider
-     *
-     * Returns a Context.Provider with a living subscription to your
-     * specified state fragment
-     */
-    createProvider(stateName) {
-        const { Context } = this;
-        return class ProviderFactory extends Component {
-            mounted = true;
-            subscription;
-            constructor(props) {
-                super(props);
-                this.state = Empire.getState(stateName).state;
-                this.subscription = this.initializeSubscription();
-            }
-            initializeSubscription() {
-                return Empire.getState(stateName).subscribe((state) => {
-                    if (this.mounted) {
-                        this.setState(state);
-                    }
-                });
-            }
-            componentWillUnmount() {
-                this.mounted = false;
-                if (this.subscription) {
-                    Empire.getState(stateName).unsubscribe(this.subscription);
-                }
-            }
-            render() {
-                return React.createElement(Context.Provider, { value: this.state }, this.props.children);
-            }
-        };
-    }
-}
+      };
+
+      _proto2.render = function render() {
+        return React.createElement(Context.Provider, {
+          value: this.state
+        }, this.props.children);
+      };
+
+      return ProviderFactory;
+    }(Component);
+  };
+
+  return ContextFactory;
+}();
 
 export { ContextFactory, useEmpireState, useGalenaMutation, useGalenaState };
