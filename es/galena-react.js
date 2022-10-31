@@ -1,92 +1,89 @@
 import React, { useState, useEffect, Component, createContext } from 'react';
-import { Empire } from 'galena';
 import _inheritsLoose from '@babel/runtime/helpers/esm/inheritsLoose';
 
 /**
- * Use Galena State
+ * Galena Hook Factory
  *
- * Creates a global subscription your specified state fragment
- * and returns it's stateful value
+ * Generates a `useGalenaState` hook for a given state fragment
  */
 
-function useGalenaState(stateName, connect, defaultValue) {
-  var _useState = useState(connect(Empire.getState(stateName).state || defaultValue)),
-      state = _useState[0],
-      setState = _useState[1];
+function galenaHookFactory(stateFragment) {
+  return function useGalenaState(connect) {
+    var _useState = useState(connect(stateFragment.state)),
+        state = _useState[0],
+        setState = _useState[1];
 
-  useEffect(function () {
-    var _Empire$getState;
+    useEffect(function () {
+      var ID = stateFragment.subscribe(function (nextState) {
+        var next = connect(nextState);
 
-    var ID = (_Empire$getState = Empire.getState(stateName)) == null ? void 0 : _Empire$getState.subscribe(function (stateFragment) {
-      var nextState = connect(stateFragment);
-
-      if (nextState !== state) {
-        setState(nextState);
-      }
+        if (next !== state) {
+          setState(next);
+        }
+      });
+      return function () {
+        return stateFragment.unsubscribe(ID);
+      };
     });
-    return function () {
-      var _Empire$getState2;
-
-      return (_Empire$getState2 = Empire.getState(stateName)) == null ? void 0 : _Empire$getState2.unsubscribe(ID);
-    };
-  }, []);
-  return state;
+    return state;
+  };
 }
 
 /**
- * Use Empire State
+ * Empire Hook Factory
  *
- * Creates a global subscription to the `Empire` state and
- * returns it's value
+ * Generates a `useEmpireState` hook for a given state fragment
  */
 
-function useEmpireState(connect) {
-  var _useState = useState(connect(Empire.state)),
-      state = _useState[0],
-      setState = _useState[1];
+function empireHookFactory(empire) {
+  return function useEmpireState(connect) {
+    var _useState = useState(connect(empire.state)),
+        state = _useState[0],
+        setState = _useState[1];
 
-  useEffect(function () {
-    var ID = Empire.subscribe(function (state) {
-      setState(connect(state));
+    useEffect(function () {
+      var ID = empire.subscribe(function (nextState) {
+        var next = connect(nextState);
+
+        if (next !== state) {
+          setState(next);
+        }
+      });
+      return function () {
+        return empire.unsubscribe(ID);
+      };
     });
-    return function () {
-      return Empire.unsubscribe(ID);
-    };
-  }, []);
-  return state;
+    return state;
+  };
 }
 
 /**
- * Use Galena Mutation
+ * Mutation Factory
  *
- * Returns the `update` method of your specified state fragment
+ * Generates a `useMutation` hook for a given state fragment
  */
-
-function useGalenaMutation(stateName) {
-  return Empire.getState(stateName).update;
+function mutationFactory(stateFragment) {
+  return function useMutation() {
+    return stateFragment.update;
+  };
 }
 
 /**
  * Context Factory
  *
  * A Factory for creating contexts from your state fragments.
- * Returns a Context and a ProviderFactory subscribed to your]
+ * Returns a Context and a ProviderFactory subscribed to your
  * state fragment
  *
- * `const { Context, ProviderFactory } = new ContextFactory("state-name");`
+ * `const { Context, ProviderFactory } = new ContextFactory(MyState);`
  */
 
 var ContextFactory = /*#__PURE__*/function () {
-  function ContextFactory(stateName) {
+  function ContextFactory(stateFragment) {
     this.Context = void 0;
     this.ProviderFactory = void 0;
-
-    if (!Empire.getState(stateName)) {
-      throw new Error("A state fragment by the name of " + stateName + " has not been created yet");
-    }
-
-    this.Context = createContext(Empire.getState(stateName).state);
-    this.ProviderFactory = this.createProvider(stateName);
+    this.Context = createContext(stateFragment.state);
+    this.ProviderFactory = this.createProvider(stateFragment);
   }
   /**
    * Create Provider
@@ -98,7 +95,7 @@ var ContextFactory = /*#__PURE__*/function () {
 
   var _proto = ContextFactory.prototype;
 
-  _proto.createProvider = function createProvider(stateName) {
+  _proto.createProvider = function createProvider(stateFragment) {
     var Context = this.Context;
     return /*#__PURE__*/function (_Component) {
       _inheritsLoose(ProviderFactory, _Component);
@@ -109,7 +106,9 @@ var ContextFactory = /*#__PURE__*/function () {
         _this = _Component.call(this, props) || this;
         _this.mounted = true;
         _this.subscription = void 0;
-        _this.state = Empire.getState(stateName).state;
+        _this.stateFragment = void 0;
+        _this.state = stateFragment.state;
+        _this.stateFragment = stateFragment;
         _this.subscription = _this.initializeSubscription();
         return _this;
       }
@@ -119,7 +118,7 @@ var ContextFactory = /*#__PURE__*/function () {
       _proto2.initializeSubscription = function initializeSubscription() {
         var _this2 = this;
 
-        return Empire.getState(stateName).subscribe(function (state) {
+        return this.stateFragment.subscribe(function (state) {
           if (_this2.mounted) {
             _this2.setState(state);
           }
@@ -130,7 +129,7 @@ var ContextFactory = /*#__PURE__*/function () {
         this.mounted = false;
 
         if (this.subscription) {
-          Empire.getState(stateName).unsubscribe(this.subscription);
+          this.stateFragment.unsubscribe(this.subscription);
         }
       };
 
@@ -147,4 +146,4 @@ var ContextFactory = /*#__PURE__*/function () {
   return ContextFactory;
 }();
 
-export { ContextFactory, useEmpireState, useGalenaMutation, useGalenaState };
+export { ContextFactory, empireHookFactory, galenaHookFactory, mutationFactory };

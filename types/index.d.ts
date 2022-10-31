@@ -1,4 +1,4 @@
-export { useGalenaState } from "./useGalenaState";
-export { useEmpireState } from "./useEmpireState";
-export { useGalenaMutation } from "./useGalenaMutation";
+export { galenaHookFactory } from "./galenaHookFactory";
+export { empireHookFactory } from "./empireHookFactory";
+export { mutationFactory } from "./mutationFactory";
 export { ContextFactory } from "./ContextFactory";

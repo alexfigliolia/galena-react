@@ -1,28 +1,30 @@
 import React from "react";
 import type { Context, ComponentType } from "react";
+import { State } from "galena";
 /**
  * Context Factory
  *
  * A Factory for creating contexts from your state fragments.
- * Returns a Context and a ProviderFactory subscribed to your]
+ * Returns a Context and a ProviderFactory subscribed to your
  * state fragment
  *
- * `const { Context, ProviderFactory } = new ContextFactory("state-name");`
+ * `const { Context, ProviderFactory } = new ContextFactory(MyState);`
  */
 export declare class ContextFactory<T> {
     Context: Context<T>;
     ProviderFactory: ComponentType<T>;
-    constructor(stateName: string);
+    constructor(stateFragment: State<T>);
     /**
      * Create Provider
      *
      * Returns a Context.Provider with a living subscription to your
      * specified state fragment
      */
-    createProvider(stateName: string): {
+    createProvider(stateFragment: State<T>): {
         new (props: any): {
             mounted: boolean;
             subscription: string;
+            stateFragment: State<T>;
             initializeSubscription(): string;
             componentWillUnmount(): void;
             render(): JSX.Element;
