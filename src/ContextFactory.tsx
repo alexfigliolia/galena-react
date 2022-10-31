@@ -1,25 +1,22 @@
-import { Empire } from "galena";
 import React, { Component, createContext } from "react";
 import type { Context, ComponentType } from "react";
+import { State } from "galena";
 
 /**
  * Context Factory
  *
  * A Factory for creating contexts from your state fragments.
- * Returns a Context and a ProviderFactory subscribed to your]
+ * Returns a Context and a ProviderFactory subscribed to your
  * state fragment
  *
- * `const { Context, ProviderFactory } = new ContextFactory("state-name");`
+ * `const { Context, ProviderFactory } = new ContextFactory(MyState);`
  */
 export class ContextFactory<T> {
   Context: Context<T>;
   ProviderFactory: ComponentType<T>;
-  constructor(stateName: string) {
-    if (!Empire.getState<T>(stateName)) {
-      throw new Error(`A state fragment by the name of ${stateName} has not been created yet`);
-    }
-    this.Context = createContext<T>(Empire.getState<T>(stateName).state);
-    this.ProviderFactory = this.createProvider(stateName);
+  constructor(stateFragment: State<T>) {
+    this.Context = createContext<T>(stateFragment.state);
+    this.ProviderFactory = this.createProvider(stateFragment);
   }
 
   /**
@@ -28,19 +25,21 @@ export class ContextFactory<T> {
    * Returns a Context.Provider with a living subscription to your
    * specified state fragment
    */
-  createProvider(stateName: string) {
+  createProvider(stateFragment: State<T>) {
     const { Context } = this;
     return class ProviderFactory extends Component<any, T> {
       mounted = true;
       subscription: string;
+      stateFragment: State<T>;
       constructor(props: any) {
         super(props);
-        this.state = Empire.getState<T>(stateName).state;
+        this.state = stateFragment.state;
+        this.stateFragment = stateFragment;
         this.subscription = this.initializeSubscription();
       }
 
       initializeSubscription() {
-        return Empire.getState<T>(stateName).subscribe((state) => {
+        return this.stateFragment.subscribe((state) => {
           if (this.mounted) {
             this.setState(state);
           }
@@ -50,7 +49,7 @@ export class ContextFactory<T> {
       componentWillUnmount() {
         this.mounted = false;
         if (this.subscription) {
-          Empire.getState<T>(stateName).unsubscribe(this.subscription);
+          this.stateFragment.unsubscribe(this.subscription);
         }
       }
 
