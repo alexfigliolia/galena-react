@@ -1,13 +1,18 @@
-# Galena
+# Galena React
 
-Galena is a lightning fast framework-agnostic state manager that comes in at less than 4kb minified. Galena gets its speed from two primary design decisions:
+React bindings for [Galena](https://www.npmjs.com/package/galena)!
 
-1. Mutable state updates - Galena will never require you to create shallow or deep copies of your state before your update it. With Galena your state updates occur in O(1) space.
-2. An event emitter - Galena uses an event emitter to handle internal reconciliations of state. No more deep object comparisons required to figure out what changed.
+#### Getting Started
 
-Galena supports the notion of a global application state through `Empire's`. Each time you create a fragment of application state, your `Empire` gains access to it. This means you can interface with your application state either through your `Empire` (your combined `State` fragments) or by using the individual fragments themselves. It also promotes the idea of lazy global state by default. As you may know, in many global application state managers, you are required to declare the vast majority of your state tree upfront, or incur a somewhat severe complexity increase caused by lazy injection. In Galena, no such complexity exist.
+```bash
+npm i -S galena galena-react
+# or
+yarn add galena galena-react
+```
 
-#### Creating A State Fragment
+#### Creating State Fragments
+
+If you're already familiar with Galena, you can skip this part. Below, we are going to set up a really basic fragment of our application state under the alias `my-state`
 
 ```TypeScript
 import { State } from 'galena';
@@ -35,59 +40,150 @@ export class MyState extends State<IMyState> {
 }
 ```
 
-#### Accessing and Updating State
+#### Subscribing to State in your Components:
 
-Accessing and updating `MyState` can be done by leveraging the `MyState` class or Galena's `Empire`.
-
-Using `MyState`:
+Next, let's use `my-state` values inside of our JSX:
 
 ```TypeScript
+import { useGalenaState } from 'galena-react';
+
+const MyComponent = (props) => {
+  const state = useGalenaState("my-state", (state) => state);
+  /*
+    {
+      toggle: true,
+      authenticated: false,
+      username: ""
+    }
+  */
+
+  // ... Your JSX
+}
+```
+
+#### Updating State in your Components using MyState:
+
+Let's use a basic input element to set values on the `my-state` fragment:
+
+```TSX
 import { MyState } from './MyState';
 
-// Get the latest updates to MyState
-MyState.subscribe(state => {
-  // called any time MyState is updated
-});
+const MyComponent = (props) => {
 
-// Return the current value of MyState
-MyState.state
+  const setUserName = (username: string) = {
+    MyState.setUserName(username);
+  }
 
-// Update MyState
-MyState.update(state => {
-  // state.toggle = true
-});
+  return (
+    <input onChange={setUserName}>
+  );
+}
 ```
 
-Using `Empire`:
+#### Updating State in your Components using Empire:
+
+Let's do the same operation, but this time, without importing our State instance:
+
+```TSX
+import { Empire } from 'galena';
+
+const MyComponent = (props) => {
+
+  const setUserName = (username: string) = {
+    Empire.getState("my-state").setUserName(username);
+  }
+
+  return (
+    <input onChange={setUserName}>
+  );
+}
+```
+
+#### Creating Contexts from Galena State
+
+This library offers up a utility for easily using your Galena states in the form of more familiar React Contexts:
+
+```TSX
+import { ContextFactory } from 'galena-react';
+
+export const { ProviderFactory, Consumer } = new ContextFactory("my-state");
+
+// ProviderFactory is a subscription to your MyState fragment
+// Consumer is a traditional React.Context Consumer
+
+const MyComponent = () => {
+  return (
+    <ProviderFactory>
+      <Consumer>
+        {myState => {
+          /*
+            {
+              toggle: true,
+              authenticated: false,
+              username: ""
+            }
+          */
+          <ChildComponent myState={myState}>
+        }}
+      </Consumer>
+    </ProviderFactory>
+  );
+}
+```
+
+While contexts are familiar, Galena by default requires no Component hierarchies in your react tree in order to work. This means, if you wish to use Galena in your React Application without any contexts or root-level wrappers, you can! Simply opt for the react hooks and connect function found in this library:
+
+### Utilities:
+
+#### connect
+
+Similar to the `connect` function found in React-Redux, Galena's `connect` function can inject your Galena state values into your class or functional components. It's syntax is highly familiar:
 
 ```TypeScript
-// Using Empire
-import { Empire } from 'galena'
+import { connect } from 'galena-react';
 
-Empire.getState("my-state").subscribe(state => {
-  // get the latest updates to MyState
-});
+class MyComponent extends Component {
+  render() {
+    const { username } = this.props;
+    return <span>{username}</span>
+  }
+}
 
-Empire.getState("my-state").state // returns the current value of MyState
-
-// Mutate MyState
-Empire.getState("my-state").update(state => {
-  // state.toggle = true
-});
+export default connect((state) => {
+  const { username } = state.get("my-state");
+  return { username };
+})(MyComponent)
 ```
 
-Note: for usage with `React`, please checkout our `galena-react` library!
+#### useGalenaState
 
-#### More on Speed:
+Alternative to `connect`, the `useGalenaState` hook can allow you to bypass the need for generating a wrapper around your components:
 
-Galena is also smart enough to emit state updates based on internal subscription patterns. Because Galena creates living fragments from your global state object, your subscriptions can be differentiated from one another based upon the state it consumes. This is what allows Galena to be lightning fast compared to other state libraries!
+```TypeScript
+import { useGalenaState } from 'galena-react';
 
-Your State consumers never recompute unless you explicitly update the state they consume. This means your components and subscribers will never require complex memoization in order to prevent wasteful rerenders or dead computations (cough _redux_ cough).
-
-## Getting Started
-
-```bash
-npm i -S galena
-# or
-yarn add galena
+const MyComponent = () => {
+  const username = useGalenaState("my-state", state => state.username);
+  return <span>{username}</span>
+}
 ```
+
+#### useEmpireState
+
+This library also provides a means for subscribing to the global application state as opposed to fragments of it:
+
+```TypeScript
+import { useEmpireState } from 'galena-react';
+
+const MyComponent = () => {
+  const complexState = useEmpireState(state => {
+    const myState = state.get("my-state");
+    const otherState = state.get("other-state");
+    // some computes based on current state
+    return { ...myState, ...otherState}
+  });
+  return <span>{complexState.username}</span>
+}
+```
+
+Subscriptions such as the above come with some performance drawbacks when compared to using `useGalenaState`. `useGalenaState` is highly optimized for only recomputing state values based on exact updates to the `State` fragments being subscribed to. It is often better to use multiple `useGalenaState` hooks over `useEmpireState`.

@@ -2,13 +2,14 @@
   "parser": "@typescript-eslint/parser",
   "extends": [
     "eslint:recommended",
+    "plugin:react/recommended",
     "eslint-config-airbnb-base/rules/es6",
     "plugin:jest/recommended",
     "plugin:prettier/recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "plugins": ["@typescript-eslint", "import", "jest", "prettier"],
+  "plugins": ["@typescript-eslint", "import", "jest", "prettier", "react"],
   "rules": {
     "prettier/prettier": ["error"],
     "import/no-unresolved": "error",
@@ -44,5 +45,13 @@
   },
   "parserOptions": {
     "project": "./tsconfig.json"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "no-undef": "off"
+      }
+    }
+  ]
 }
