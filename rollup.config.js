@@ -2,6 +2,7 @@ import { defineConfig } from "rollup";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
 import replace from "@rollup/plugin-replace";
+import commonjs from '@rollup/plugin-commonjs';
 import typescript from "rollup-plugin-typescript2";
 import { terser } from "rollup-plugin-terser";
 
@@ -82,6 +83,9 @@ export default defineConfig([
         skipPreflightCheck: true,
         babelHelpers: "bundled",
       }),
+      commonjs({
+        include: 'node_modules/**'
+      }),
       terser({
         compress: {
           pure_getters: true,
@@ -98,8 +102,8 @@ export default defineConfig([
     output: {
       file: "dist/galena-react.js",
       format: "umd",
-      name: "Galena React",
-      indent: false,
+      name: "galena-react",
+      indent: false
     },
     plugins: [
       nodeResolve({
@@ -114,6 +118,9 @@ export default defineConfig([
         exclude: "node_modules/**",
         babelHelpers: "bundled",
       }),
+      commonjs({
+        include: 'node_modules/**'
+      }),
       replace({
         preventAssignment: true,
         "process.env.NODE_ENV": JSON.stringify("development"),
@@ -127,7 +134,7 @@ export default defineConfig([
     output: {
       file: "dist/galena-react.min.js",
       format: "umd",
-      name: "Galena React",
+      name: "galena-react",
       indent: false,
     },
     plugins: [
@@ -143,6 +150,9 @@ export default defineConfig([
         exclude: "node_modules/**",
         skipPreflightCheck: true,
         babelHelpers: "bundled",
+      }),
+      commonjs({
+        include: 'node_modules/**',
       }),
       replace({
         preventAssignment: true,
